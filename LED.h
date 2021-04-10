@@ -25,9 +25,35 @@
 #define LED2_PORT DIO_PORTD
 #define LED2_PIN DIO_PIN_3
 
+#define CALLBACK_INT_ENABLE	1
+
 void LED_Init(uint8 LED);
+#ifdef CALLBACK_INT_ENABLE
+	void LED0_Init(void);
+	void LED1_Init(void);
+	void LED2_Init(void);
+#endif
+
+
 void LED_ON(uint8 LED);
+#ifdef CALLBACK_INT_ENABLE
+	void LED0_ON(void);
+	void LED1_ON(void);
+	void LED2_ON(void);
+#endif
+
 void LED_OFF(uint8 LED);
+#ifdef CALLBACK_INT_ENABLE
+	void LED0_OFF(void);
+	void LED1_OFF(void);
+	void LED2_OFF(void);
+#endif
+
 void LED_Toggle(uint8 LED);
+#ifdef CALLBACK_INT_ENABLE
+	void LED0_Toggle(void);
+	void LED1_Toggle(void);
+	void LED2_Toggle(void);
+#endif
 
 #endif /* LED_H_ */
