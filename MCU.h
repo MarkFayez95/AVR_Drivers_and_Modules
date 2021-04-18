@@ -52,7 +52,7 @@
 
 #define ACSR    (*(volatile uint8*)0x28)
 #define ACIS0   0
-#define ACIS0   1
+#define ACIS1   1
 #define ACIC    2
 #define ACIE    3
 #define ACI     4

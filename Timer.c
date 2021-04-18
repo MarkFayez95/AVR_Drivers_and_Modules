@@ -9,58 +9,78 @@
 #include "Timer.h"
 #include <avr/interrupt.h>
 
-uint32 Num_Ovf = 0;
-uint32 Init_Value = 0;
+uint32 Timer0_Num_Ovf = 0;
+uint32 Timer0_Init_Value = 0;
 
-void (*Ptr)(void);
+uint32 Timer1_Num_Ovf = 0;
+uint32 Timer1_Init_Value = 0;
+
+void (*Timer0_CallBack_Fun_Ptr)(void);
+void (*Timer1_CallBack_Fun_Ptr)(void);
+
+/******************Timer 0******************/
+TIMER0_CONF	Timer_0 ={TIMER_NORM,NORMAL,CLK_PRESC_1024,REG_SI_8,PRESC_1024,0,0,NULL};
 
 void Timer0_Init(void)
 {
 	// Set Normal Mode //
 	ClearBit(TCCR0,WGM00);
 	ClearBit(TCCR0,WGM01);
+
+	// Enable OverFlow interrupts for Timer0 //
+	SetBit(TIMSK, TOIE0);
 	
 	// Enable Global interrupts //
 	SetBit(SREG,SREG_I);
-	
-	// Enable OverFlow interrupts for Timer0 //
-	SetBit(TIMSK, TOIE0);
 }
 
 void Timer0_SetDelay(uint32 Delay_Ms)
 {
-	uint32 Total_Ticks = ((Delay_Ms * 1000) / TIMER0_TICK_TIME);
-	
-	Num_Ovf = Total_Ticks / TIMER0_TICKS;
-	
-	Init_Value = TIMER0_TICKS - (Total_Ticks % TIMER0_TICKS );
-	
-	TCNT0 = Init_Value;
-	
-	if(Init_Value != 0)
-		Num_Ovf ++;
+	switch (Timer_0.OperationType)
+	{
+		case TIMER_NORM:
+			Timer_0.Num_Ovf = ((Delay_Ms * 1000) / Timer_0.Tick_Time);
+			Timer_0.Num_Ovf = Timer_0.Num_Ovf / Timer_0.Ticks;
+			Timer_0.Init_Value = Timer_0.Ticks - (Timer_0.Num_Ovf % Timer_0.Ticks );
+			TCNT0 = Timer_0.Init_Value;
+			
+			if(Timer_0.Init_Value != 0)
+			{
+				Timer_0.Num_Ovf ++;
+			}
+		break;
+
+		default:
+		break;
+	}
 	
 }
 
 void Timer0_Start(void)
 {
 	// Set Clock's source to prescalar 1024 to start timer //
-	SetBit(TCCR0,CS00);
-	ClearBit(TCCR0,CS01);
-	SetBit(TCCR0,CS02);
+	TCCR0 &= ~CS0_MASK;
+	TCCR0 |= (Timer_0.CS0 << CS00 ) & CS0_MASK;
+	
+	//SetBit(TCCR0,CS00);
+	//ClearBit(TCCR0,CS01);
+	//SetBit(TCCR0,CS02);
+	
 }
 
 void Timer0_Stop(void)
 {
 	// Clear Clock source to stop timer //
-	ClearBit(TCCR0,CS00);
-	ClearBit(TCCR0,CS01);
-	ClearBit(TCCR0,CS02);
+	TCCR0 &= ~CS0_MASK;
+
+	//ClearBit(TCCR0,CS00);
+	//ClearBit(TCCR0,CS01);
+	//ClearBit(TCCR0,CS02);
 }
 
 void Set_Timer0_CallBack(void (*P)(void))
 {
-	Ptr = P;
+	Timer0_CallBack_Fun_Ptr = P;
 }
 
 ISR(TIMER0_OVF_vect)
@@ -68,10 +88,120 @@ ISR(TIMER0_OVF_vect)
 	static uint32 Count = 0;
 	Count++;
 	
-	if(Count == Num_Ovf)
+	if(Count == Timer0_Num_Ovf)
 	{
 		Count = 0;
-		(*Ptr)();
-		TCNT0 = Init_Value;
+		(*Timer0_CallBack_Fun_Ptr)();
+		TCNT0 = Timer0_Init_Value;
 	}
+}
+
+
+/******************Timer 1******************/
+TIMER1_CONF	Timer_1 ={};
+
+void Timer1_Init(void)
+{
+	// Set Timer Normal mode
+	ClearBit(TCCR1A,WGM10);
+	ClearBit(TCCR1A,WGM11);
+	ClearBit(TCCR1B,WGM12);
+	ClearBit(TCCR1B,WGM13);
+	
+	// Enable Global interrupts //
+	SetBit(SREG,SREG_I);
+	
+	// Enable OverFlow interrupts for Timer0 //
+	SetBit(TIMSK,TOIE1);
+	
+}
+void Timer1_SetDelay(uint32 Delay_Ms)
+{
+	uint32 Total_Ticks = ((Delay_Ms * 1000) / TIMER1_TICK_TIME);
+	
+	Timer1_Num_Ovf = Total_Ticks / TIMER1_TICKS;
+	
+	Timer1_Init_Value = TIMER1_TICKS - (Total_Ticks % TIMER1_TICKS );
+	
+	TCNT1_VAL = Timer1_Init_Value;
+	
+	if(Timer1_Init_Value != 0)
+		Timer1_Num_Ovf ++;
+}
+void Timer1_Start(void)
+{
+	// Set Clock's source to prescalar 1024 to start timer //
+	SetBit(TCCR1B,CS10);
+	ClearBit(TCCR1B,CS11);
+	SetBit(TCCR1B,CS12);
+}
+void Timer1_Stop(void)
+{
+	// Clear Clock source to stop timer //
+	ClearBit(TCCR1B,CS10);
+	ClearBit(TCCR1B,CS11);
+	ClearBit(TCCR1B,CS12);
+}
+void Set_Timer1_CallBack(void (*P)(void))
+{
+	Timer1_CallBack_Fun_Ptr = P;
+}
+
+/******************PWM 0******************/
+PWM0_CONF	PWM_0 ={};
+
+void PWM0_Init(void)
+{
+	// Set OC0 Pin Direction Output //
+	SetBit(PWM0_PORT_DIR_REG, PWM0_PORT_DIR_BIT);
+	
+	// Set PWM Fast //
+	SetBit(TCCR0,WGM01);
+	SetBit(TCCR0,WGM00);
+	
+	// Set Non-Inverted Mode //
+	SetBit(TCCR0,COM01);
+}
+void PWM0_Generate(uint16 Duty_Cycle)
+{
+	OCR0 = ((Duty_Cycle * 256) / 100) - 1;
+}
+void PWM0_Start(void)
+{
+	// Set no pre-scalar //
+	SetBit(TCCR0,CS00);
+	ClearBit(TCCR0,CS01);
+	ClearBit(TCCR0,CS02);
+}
+
+/******************PWM 1******************/
+PWM1_CONF	PWM_1 ={};
+
+void PWM1_Init(void)
+{
+	// Set OC1A Pin Direction Output //
+	SetBit(DDRD,5);
+	
+	// Set Timer_1 Mode-14 //
+	ClearBit(TCCR1A,WGM10);
+	SetBit(TCCR1A,WGM11);
+	SetBit(TCCR1B,WGM12);
+	SetBit(TCCR1B,WGM13);
+	
+	// Set Non-Inverted PWM //
+	SetBit(TCCR1A,COM1A1);
+	ClearBit(TCCR1A,COM1A0);
+	
+	// Set Value of ICR1 //
+	ICR1 = PWM1_TOP_VALUE;
+	
+}
+void PWM1_Generate(uint16 Duty_Cycle)
+{
+	OCR1A_VAL = ((Duty_Cycle * PWM1_TOP_VALUE)/100) - 1;
+}
+void PWM1_Start(void)
+{
+	// Set Pre-scalar 256 //
+	SetBit(TCCR1B,CS11);
 }
