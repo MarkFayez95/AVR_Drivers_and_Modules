@@ -5,8 +5,8 @@
  *  Author: Mark Fayez
  */ 
 
-#ifndef TIMER_DTYPES_H_
-#define TIMER_DTYPES_H_
+#ifndef TIMER_STRUCTURES_H_
+#define TIMER_STRUCTURES_H_
 
 #include "Bit_math.h"
 #include "MCU.h"
@@ -187,4 +187,4 @@ typedef struct
     void (*CallBack_Fun)(void);
 } PWM1_CONF;
 
-#endif /* TIMER_DTYPES_H_ */
+#endif /* TIMER_STRUCTURES_H_ */

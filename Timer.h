@@ -11,7 +11,7 @@
 
 #include "Bit_math.h"
 #include "MCU.h"
-#include "Timer_DTypes.h"
+#include "Timer_Structures.h"
 
 /******************Timers Configuration options******************/
 #define	PRESC_OFF	1
