@@ -26,7 +26,6 @@
 #define REG_SI_24	24
 #define REG_SI_32	32
 
-
 /****************** Timers Constrains / Settings ******************/
 #define CLK_FREQ	16
 
@@ -36,8 +35,10 @@
 #define PWM1_TOP_VALUE	1250
 
 /****************** Timers Constrain Bits Masks ******************/
-
+#define WGM0_MASK   0x48
+#define WAV_GEN_0_MASK(Wave_Gen_mode)   ((Wave_Gen_mode<<(WGM01-1))|(Wave_Gen_mode<<WGM00)) & WGM0_MASK
 #define CS0_2_0_MASK    0x07
+#define COM0_MASK       0x30
 
 #define WGM1_10_MASK     0x03
 #define WGM1_32_MASK     0x18
