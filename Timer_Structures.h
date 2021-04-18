@@ -14,14 +14,6 @@
 //*********** Genral Timer SettingS / Options ***********//
 typedef enum
 {
-    TIMER_NORM,
-    PWM_PH_CORRECT,
-    TIMER_CTC,
-    PWM_FAST
-} OP_TYPES;
-
-typedef enum
-{
     NORMAL,
     CTC_TOGGLE,
     CTC_CLEAR,
@@ -41,63 +33,71 @@ typedef enum
 } CLK_SEL;
 
 //*********** Special for Timer_0 Setting Options ***********//
+typedef enum
+{
+    TIMER_NORM,
+    PWM_PH_CORRECT,
+    TIMER_CTC,
+    PWM_FAST
+} OP_TYPES;
 
 typedef enum
 {
-    NORMAL,
-    RESERVED,
-    CLR_SET,
-    SET_CLR
+    NORMAL,         // COM0_10 Mode selection
+    RESERVED,       // COM0_10 Mode selection
+    CLR_SET,        // COM0_10 Mode selection
+    SET_CLR         // COM0_10 Mode selection
 } PWM_MOD;
 
 //*********** Special for Timer_1 Setting Options ***********//
 typedef enum
 {
-    NORM_PWM_PH_CO_TYPE,
-    CTC_PWM_FAST_TYPE,
-    PWM_PH_CO_MODE,
-    CTC_PWM_FAST_MODE
+    NORM_PWM_PH_CO_TYPE,    // WGM1_32 Modes 0-3
+    CTC_PWM_FAST_TYPE,      // WGM1_32 Modes 4-7
+    PWM_PH_CO_MODE,         // WGM1_32 Modes 8-11
+    CTC_PWM_FAST_MODE       // WGM1_32 Modes 12-15
 } WAVE_GEN_MAIN_SETS;
 
 typedef enum
 {
-    NORMAL,
-    FAST_8_BIT,
-    FAST_9_BIT,
-    FAST_10_BIT
-} PWM_FAST_TYPES;
-
-typedef enum
-{
-    NORMAL,
-    PWM_PH_CO_8_BIT,
-    PWM_PH_CO_9_BIT,
-    PWM_PH_CO_10_BIT
+    //NORMAL,           // WGM1_10 Mode 0
+    PWM_PH_CO_8_BIT=1,  // WGM1_10 Mode 1
+    PWM_PH_CO_9_BIT,    // WGM1_10 Mode 2
+    PWM_PH_CO_10_BIT    // WGM1_10 Mode 3
 } PWM_PH_CO_TYPES;
 
 typedef enum
 {
-    NORMAL,
-    TOGGLE_OC1A_ON_MATCH,
-    CLR_ON_MATCH_SET_ON_TOP,
-    SET_ON_MATCH_CLR_ON_TOP
-} PWM_OP;
+    CTC_TOP_OCR1A,    // WGM1_10 Mode 4
+    FAST_8_BIT,       // WGM1_10 Mode 5
+    FAST_9_BIT,         // WGM1_10 Mode 6
+    FAST_10_BIT         // WGM1_10 Mode 7
+} PWM_FAST_TYPES;
+
 
 typedef enum
 {
-    TOP_ICR1_UPDATE_ON_BOTTOM,
-    TOP_OCR1A_UPDATE_ON_BOTTOM,
-    TOP_ICR1_UPDATE_ON_TOP,
-    TOP_OCR1A_UPDATE_ON_TOP
+    TOP_ICR1_UPDATE_ON_BOTTOM,      // WGM1_10 Mode 8
+    TOP_OCR1A_UPDATE_ON_BOTTOM,     // WGM1_10 Mode 9
+    TOP_ICR1_UPDATE_ON_TOP,         // WGM1_10 Mode 10
+    TOP_OCR1A_UPDATE_ON_TOP         // WGM1_10 Mode 11
 } PWM_PH_CO_MODES;
 
 typedef enum
 {
-    TOP_ICR1,
-    TOP_OCR1A
+    CTC_TOP_ICR1,   // WGM1_10 Mode 12
+    //RESERVED,       // WGM1_10 Mode 13
+    TOP_ICR1=2,       // WGM1_10 Mode 14
+    TOP_OCR1A         // WGM1_10 Mode 15
 } PWM_FAST_modes;
 
-
+typedef enum
+{
+    //NORMAL,
+    TOGGLE_OC1A_ON_MATCH=1,     // COM1A/COM1B_10 Mode selection
+    CLR_ON_MATCH_SET_ON_TOP,    // COM1A/COM1B_10 Mode selection
+    SET_ON_MATCH_CLR_ON_TOP     // COM1A/COM1B_10 Mode selection
+} PWM_OP;
 
 //*********** Timers Configuration Structures ***********//
 typedef struct 
@@ -105,15 +105,18 @@ typedef struct
     OP_TYPES OperationType;
     CTC_OP OperationMode;
 
-    CLK_SEL CS0;
+    CLK_SEL Clk_Source_CS0;
 
     uint8   Reg_Size;
-    uint32  prescalar;
+    uint16  prescalar;
     uint32  Ticks;
-    uint32  Tick_Time;
+    float64  Tick_Time;
+    
 
     uint32  Num_Ovf;
-    uint32  Init_Value;
+    uint8  Init_Value;
+
+    uint8  Comp_Value;
 
     void (*CallBack_Fun)(void);
 } TIMER0_CONF;
@@ -121,20 +124,24 @@ typedef struct
 typedef struct 
 {
     WAVE_GEN_MAIN_SETS  OperationType_WGM1_32;
+    
     CTC_OP  OperationMode_COM1A_10;
     CTC_OP  OperationMode_COM1B_10;
 
     uint16 CUSTOME_TOP_ICR1;
 
-    CLK_SEL CS1_2_0;
+    CLK_SEL Clk_Source_CS1_2_0;
 
     uint8   Reg_Size;
-    uint32  prescalar;
+    uint16  prescalar;
     uint32  Ticks;
-    uint32  Tick_Time;
-
+    float64  Tick_Time;
+    
     uint32  Num_Ovf;
-    uint32  Init_Value;
+    uint16  Init_Value;
+
+    uint16  Comp_Value_A;
+    uint16  Comp_Value_B;
 
     void (*CallBack_Fun)(void);
 } TIMER1_CONF;
@@ -146,16 +153,18 @@ typedef struct
     OP_TYPES OperationType;
     PWM_MOD OperationMode;
 
-    CLK_SEL CS0_2_0;
+    CLK_SEL Clk_Source_CS0_2_0;
 
     uint8   Reg_Size;
-    uint32  prescalar;
+    uint16  prescalar;
     uint32  Ticks;
-    uint32  Tick_Time;
-    uint32  Comp_Value;
+    float64  Tick_Time;
+    
 
     uint32  Num_Ovf;
-    uint32  Init_Value;
+    uint8  Init_Value;
+
+    uint8  Comp_Value;
     
     void (*CallBack_Fun)(void);
 } PWM0_CONF;
@@ -173,16 +182,18 @@ typedef struct
 
     uint16 CUSTOME_TOP_ICR1;
 
-    CLK_SEL CS1_2_0;
+    CLK_SEL Clk_Source_CS1_2_0;
 
     uint8   Reg_Size;
-    uint32  prescalar;
+    uint16  prescalar;
     uint32  Ticks;
-    uint32  Tick_Time;
-    uint32  Comp_Value;
-
+    float64  Tick_Time;
+    
     uint32  Num_Ovf;
-    uint32  Init_Value;
+    uint16  Init_Value;
+
+    uint16  Comp_Value_A;
+    uint16  Comp_Value_B;
 
     void (*CallBack_Fun)(void);
 } PWM1_CONF;

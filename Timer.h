@@ -30,25 +30,21 @@
 /****************** Timers Constrains / Settings ******************/
 #define CLK_FREQ	16
 
-#define	TIMER0_PRESCALAR	PRESC_1024
-#define TIMER0_REG_SIZE		REG_SI_8
-
-#define	TIMER1_PRESCALAR	PRESC_1024
-#define TIMER1_REG_SIZE		REG_SI_16
-
 #define Max_Ticks(Ticks,Reg_Size)		Ticks=((uint32)1<<Reg_Size)
-#define Tick_Time_Calc(Tick_Time,Presc,Clk)     Tick_Time=(float64)(Presc/Clk)
-
-#define TIMER0_TICKS		((uint32)1 << TIMER0_REG_SIZE) /* == (2 ^ TIMER0_REG_SIZE) == 256 */
-#define TIMER0_TICK_TIME	(float64)(TIMER0_PRESCALAR / CLK_FREQ)
-
-#define TIMER1_TICKS		((uint32)1 << TIMER1_REG_SIZE) /* == (2 ^ TIMER0_REG_SIZE) == 65535 */
-#define TIMER1_TICK_TIME	(float64)(TIMER1_PRESCALAR / CLK_FREQ)
+#define Tick_Time_Calc(Presc,Clk)       (float64)(Presc/Clk)
 
 #define PWM1_TOP_VALUE	1250
 
+/****************** Timers Constrain Bits Masks ******************/
 
-#define CS0_MASK    0x07
+#define CS0_2_0_MASK    0x07
+
+#define WGM1_10_MASK     0x03
+#define WGM1_32_MASK     0x18
+
+#define COM1A_10_MASK   0xA0
+#define COM1B_10_MASK   0x30
+#define CS1_2_0_MASK    0x07
 
 /******************Timer 0******************/
 void Timer0_Init(void);

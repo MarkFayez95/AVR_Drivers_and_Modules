@@ -9,17 +9,23 @@
 #include "Timer.h"
 #include <avr/interrupt.h>
 
-uint32 Timer0_Num_Ovf = 0;
-uint32 Timer0_Init_Value = 0;
-
-uint32 Timer1_Num_Ovf = 0;
-uint32 Timer1_Init_Value = 0;
-
-void (*Timer0_CallBack_Fun_Ptr)(void);
-void (*Timer1_CallBack_Fun_Ptr)(void);
-
 /******************Timer 0******************/
-TIMER0_CONF	Timer_0 ={TIMER_NORM,NORMAL,CLK_PRESC_1024,REG_SI_8,PRESC_1024,0,0,NULL};
+TIMER0_CONF	Timer_0 = { 
+OperationType = TIMER_NORM,
+OperationMode = NORMAL,
+
+Clk_Source_CS0 = CLK_PRESC_1024,
+Reg_Size = REG_SI_8,
+prescalar = PRESC_1024,
+
+Ticks = 0,
+Tick_Time = 0,
+Num_Ovf = 0,
+Init_Value = 0,
+Comp_Value = 0,
+
+CallBack_Fun = NULL
+};
 
 void Timer0_Init(void)
 {
@@ -36,12 +42,27 @@ void Timer0_Init(void)
 
 void Timer0_SetDelay(uint32 Delay_Ms)
 {
+	Timer_0.Tick_Time = Tick_Time_Calc(Timer_0.prescalar,CLK_FREQ);
 	switch (Timer_0.OperationType)
 	{
 		case TIMER_NORM:
-			Timer_0.Num_Ovf = ((Delay_Ms * 1000) / Timer_0.Tick_Time);
-			Timer_0.Num_Ovf = Timer_0.Num_Ovf / Timer_0.Ticks;
+			Max_Ticks(Timer_0.Ticks,Timer_0.Reg_Size);
+			uint32 Num_of_Ticks = ((Delay_Ms * 1000) / Timer_0.Tick_Time);
+			Timer_0.Num_Ovf = Num_of_Ticks / Timer_0.Ticks;
 			Timer_0.Init_Value = Timer_0.Ticks - (Timer_0.Num_Ovf % Timer_0.Ticks );
+			TCNT0 = Timer_0.Init_Value;
+			
+			if(Timer_0.Init_Value != 0)
+			{
+				Timer_0.Num_Ovf ++;
+			}
+		break;
+
+		case TIMER_CTC:
+			OCR1A = Timer_0.Comp_Value;
+			uint32 Num_of_Ticks = ((Delay_Ms * 1000) / Timer_0.Tick_Time);
+			Timer_0.Num_Ovf = Num_of_Ticks / Timer_0.Comp_Value;
+			Timer_0.Init_Value = Timer_0.Ticks - (Timer_0.Num_Ovf % Timer_0.Comp_Value );
 			TCNT0 = Timer_0.Init_Value;
 			
 			if(Timer_0.Init_Value != 0)
@@ -59,28 +80,19 @@ void Timer0_SetDelay(uint32 Delay_Ms)
 void Timer0_Start(void)
 {
 	// Set Clock's source to prescalar 1024 to start timer //
-	TCCR0 &= ~CS0_MASK;
-	TCCR0 |= (Timer_0.CS0 << CS00 ) & CS0_MASK;
-	
-	//SetBit(TCCR0,CS00);
-	//ClearBit(TCCR0,CS01);
-	//SetBit(TCCR0,CS02);
-	
+	TCCR0 &= ~CS0_2_0_MASK;
+	TCCR0 |= (Timer_0.CS0 << CS00 ) & CS0_2_0_MASK;
 }
 
 void Timer0_Stop(void)
 {
 	// Clear Clock source to stop timer //
-	TCCR0 &= ~CS0_MASK;
-
-	//ClearBit(TCCR0,CS00);
-	//ClearBit(TCCR0,CS01);
-	//ClearBit(TCCR0,CS02);
+	TCCR0 &= ~CS0_2_0_MASK;
 }
 
 void Set_Timer0_CallBack(void (*P)(void))
 {
-	Timer0_CallBack_Fun_Ptr = P;
+	Timer_0.CallBack_Fun = P;
 }
 
 ISR(TIMER0_OVF_vect)
@@ -88,17 +100,39 @@ ISR(TIMER0_OVF_vect)
 	static uint32 Count = 0;
 	Count++;
 	
-	if(Count == Timer0_Num_Ovf)
+	if(Count == Timer_0.Num_Ovf)
 	{
 		Count = 0;
-		(*Timer0_CallBack_Fun_Ptr)();
-		TCNT0 = Timer0_Init_Value;
+		(*Timer_0.CallBack_Fun)();
+		TCNT0 = Timer_0.Init_Value;
 	}
 }
 
 
 /******************Timer 1******************/
-TIMER1_CONF	Timer_1 ={};
+TIMER1_CONF	Timer_1 ={
+	OperationType_WGM1_32 = 0,
+
+    OperationMode_COM1A_10 = 0,
+    OperationMode_COM1B_10 = 0,
+
+    CUSTOME_TOP_ICR1 = 0,
+
+    Clk_Source_CS1_2_0 = 0,
+
+    Reg_Size = 0,
+    prescalar = 0,
+    Ticks = 0,
+    Tick_Time = 0
+    
+    Num_Ovf = 0,
+    Init_Value = 0,
+
+    Comp_Value_A = 0,
+    Comp_Value_B = 0,
+
+    CallBack_Fun = NULL
+};
 
 void Timer1_Init(void)
 {
@@ -148,7 +182,24 @@ void Set_Timer1_CallBack(void (*P)(void))
 }
 
 /******************PWM 0******************/
-PWM0_CONF	PWM_0 ={};
+PWM0_CONF	PWM_0 ={
+	OperationType = 0,
+	OperationMode = 0,
+
+	Clk_Source_CS0_2_0 = 0,
+
+	Reg_Size = 0,
+	prescalar = 0,
+	Ticks = 0,
+	Tick_Time = 0,
+
+	Num_Ovf = 0,
+	Init_Value = 0,
+
+	Comp_Value = 0,
+
+	CallBack_Fun = NULL
+};
 
 void PWM0_Init(void)
 {
@@ -175,7 +226,33 @@ void PWM0_Start(void)
 }
 
 /******************PWM 1******************/
-PWM1_CONF	PWM_1 ={};
+PWM1_CONF	PWM_1 ={
+	OperationType_WGM1_32 = 0,
+	Operation_Fast_Type_WGM1_10 = 0,
+	Operation_Fast_Mod_WGM1_10 = 0,
+	Operation_Ph_Co_Type_WGM1_10 = 0,
+	Operation_Ph_Co_Mod_WGM1_10 = 0,
+
+    OperationMode_COM1A_10 = 0,
+    OperationMode_COM1B_10 = 0,
+
+    CUSTOME_TOP_ICR1 = 0,
+
+    Clk_Source_CS1_2_0 = 0,
+
+    Reg_Size = 0,
+    prescalar = 0,
+    Ticks = 0,
+    Tick_Time = 0,
+    
+    Num_Ovf = 0,
+    Init_Value = 0,
+
+    Comp_Value_A = 0,
+    Comp_Value_B = 0,
+
+    CallBack_Fun = NULL
+};
 
 void PWM1_Init(void)
 {
