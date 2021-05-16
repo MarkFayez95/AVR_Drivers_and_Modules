@@ -85,7 +85,7 @@
 #define UDR     (*(volatile uint8*)0x2C)
 
 /*************************************** SPI Registers **********************************/
-#define SPCR    (*(volatile uint8*)0x2D)
+// SPCR bits
 #define SPR0    0
 #define SPR1    1
 #define CPHA    2
@@ -95,12 +95,19 @@
 #define SPE     6
 #define SPIE    7
 
-#define SPSR    (*(volatile uint8*)0x2E)
+// SPSR bits
 #define SPI2X   0
 #define WCOL    6
 #define SPIF    7
 
-#define SPDR    (*(volatile uint8*)0x2F)
+typedef struct 
+{
+	uint8 SPCR;
+	uint8 SPSR;
+	uint8 SPDR;
+}SPI_REG;
+
+#define SPI ((volatile SPI_REG*) 0x2D)
 
 /*************************************** DIO Ports Registers **********************************/
 
@@ -120,6 +127,27 @@
 #define DDRA    (*(volatile uint8*)0x3A)
 #define PORTA   (*(volatile uint8*)0x3B)
 
+#define PIN0	0
+#define PIN1	1
+#define PIN2	2
+#define PIN3	3
+#define PIN4	4
+#define PIN5	5
+#define PIN6	6
+#define PIN7	7
+
+typedef struct
+{
+	uint8 PIN;
+	uint8 DDR;
+	uint8 PORT;
+}PORT_REG;
+
+#define PORT_D	((volatile PORT_REG*)0x30)
+#define PORT_C	((volatile PORT_REG*)0x33)
+#define PORT_B	((volatile PORT_REG*)0x36)
+#define PORT_A ((volatile PORT_REG*)0x39)
+
 /*************************************** EEPROM Registers **********************************/
 
 #define EECR        (*(volatile uint8*)0x3C)
@@ -137,8 +165,9 @@
 #define EEAR9       1
 
 /*************************************** USART Register **********************************/
+#define UBRRH		(*(volatile uint8*)0x40)
 
-#define UCSRC_UBRRH     (*(volatile uint16*)0x40)
+#define UCSRC		(*(volatile uint8*)0x40)
 #define UCPOL           0
 #define UCSZ0           1
 #define UCSZ1           2
@@ -147,9 +176,7 @@
 #define UPM1            5
 #define UMSEL           6
 #define UCSRC_URSEL     7
-#define UBRR            8
-#define UBRR_MASK       0x0F00
-#define UBRRH_URSEL     15
+
 
 /*************************************** WDT Register **********************************/
 
@@ -264,15 +291,28 @@
 #define RWWSB   6
 #define SPMIE   7
 
+#define OCR0	(*(volatile uint8*)0x5C)
+
+/***************************Timer Interrupt Mask Register***************************/
 #define TIFR	(*(volatile uint8*)0x58)
 #define TOV0	0
 #define OCF0	1
+#define TOV1	2
+#define OCF1B	3
+#define OCF1A	4
+#define ICF1	5
+#define	TOV2	6
+#define OCF2	7
 
 #define TIMSK	(*(volatile uint8*)0x59)
 #define TOIE0	0
 #define OCIE0	1
-
-#define OCR0	(*(volatile uint8*)0x5C)
+#define TOIE1	2
+#define OCIE1B	3
+#define OCIE1A	4
+#define TICIE1	5
+#define TOIE2	6
+#define OCIE2	7
 
 /*************************************** SP Register **********************************/
 
