@@ -138,9 +138,9 @@ typedef struct
 
 typedef struct
 {
-	uint8 PIN;
-	uint8 DDR;
-	uint8 PORT;
+	volatile uint8 PIN;
+	volatile uint8 DDR;
+	volatile uint8 PORT;
 }PORT_REG;
 
 #define PORT_D	((volatile PORT_REG*)0x30)

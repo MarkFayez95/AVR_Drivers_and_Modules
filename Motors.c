@@ -30,11 +30,11 @@ void DCMotor_Init(void)
 		Timer_1.PWM_OP_Mode_COM1B_10 = NON_INVERTED;
 		Timer_1.OC_Ch_FOC1A_B = CH_A_B;
 	#elif (MOTOR_A_SEL == ENABLE)
-		Timer_1.PWM_OP_Mode_COM1A_10 = NON_INVERTED;
-		Timer_1.OC_Ch_FOC1A_B = CH_A_ONLY;
-	#elif (MOTOR_B_SEL == ENABLE)
 		Timer_1.PWM_OP_Mode_COM1B_10 = NON_INVERTED;
 		Timer_1.OC_Ch_FOC1A_B = CH_B_ONLY;
+	#elif (MOTOR_B_SEL == ENABLE)
+		Timer_1.PWM_OP_Mode_COM1A_10 = NON_INVERTED;
+		Timer_1.OC_Ch_FOC1A_B = CH_A_ONLY;
 	#endif
 
 	Timer_1.Clk_Source_CS1_2_0 = CLK_PRESC_256;
@@ -53,10 +53,10 @@ void DCMotor_Init(void)
 }
 
 #if MOTOR_A_SEL == ENABLE
-	void DCMotor_A_SetDir(DCMotor_Dir dir)
+	void DCMotor_A_SetDir(DCMotor_Dir DC_Motor_Direction)
 	{
 		H_BRIDGE_DIR_PINS_PORT->PORT &= ~H_BRIDGE_DIR_MOTOR_A_MASK;
-		H_BRIDGE_DIR_PINS_PORT->PORT |= (dir << H_BRIDGE_DIR_PIN_1) & H_BRIDGE_DIR_MOTOR_A_MASK;
+		H_BRIDGE_DIR_PINS_PORT->PORT |= (DC_Motor_Direction << H_BRIDGE_DIR_PIN_1) & H_BRIDGE_DIR_MOTOR_A_MASK;
 	}
 	void DCMotor_A_Start(void)
 	{
@@ -70,10 +70,10 @@ void DCMotor_Init(void)
 #endif
 
 #if MOTOR_B_SEL == ENABLE
-	void DCMotor_B_SetDir(DCMotor_Dir dir)
+	void DCMotor_B_SetDir(DCMotor_Dir DC_Motor_Direction)
 	{
 		H_BRIDGE_DIR_PINS_PORT->PORT &= ~H_BRIDGE_DIR_MOTOR_B_MASK;
-		H_BRIDGE_DIR_PINS_PORT->PORT |= (dir << H_BRIDGE_DIR_PIN_3) & H_BRIDGE_DIR_MOTOR_B_MASK;
+		H_BRIDGE_DIR_PINS_PORT->PORT |= ((DC_Motor_Direction << H_BRIDGE_DIR_PIN_3) & H_BRIDGE_DIR_MOTOR_B_MASK);
 	}
 	void DCMotor_B_Start(void)
 	{
@@ -87,19 +87,19 @@ void DCMotor_Init(void)
 #endif
 
 #if ((MOTOR_A_SEL == ENABLE) && (MOTOR_B_SEL == ENABLE))
-	void DCMotors_SetSpeed(uint8 Speed_A, uint8 Speed_B)
+	void DCMotors_SetSpeed(uint16 Speed_A, uint16 Speed_B)
 	{
 		PWM1_Generate(Speed_A,Speed_B);
 	}
 #elif (MOTOR_A_SEL == ENABLE)
-	void DCMotor_A_SetSpeed(uint8 Speed_A)
+	void DCMotor_A_SetSpeed(uint16 Speed_A)
 	{
-		PWM1_Generate(Speed_A,0);
+		PWM1_Generate(0,Speed_A);
 	}
 #elif (MOTOR_B_SEL == ENABLE)
-	void DCMotor_B_SetSpeed(uint8 Speed_B)
+	void DCMotor_B_SetSpeed(uint16 Speed_B)
 	{
-		PWM1_Generate(0,Speed_B);
+		PWM1_Generate(Speed_B,0);
 	}
 #endif
 

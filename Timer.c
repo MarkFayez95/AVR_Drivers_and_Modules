@@ -381,9 +381,6 @@ void Timer1_Stop(void)
 /******************PWM 1******************/
 void PWM1_Init(void)
 {
-	// Set OC1A Pin Direction Output //
-	SetBit(PWM1_A_PORT_DIR_REG,PWM1_A_OC1A_PIN);
-	
 	// Set Timer_1 Operation //
 	TCCR1B &= ~WGM1_32_MASK;
 	TCCR1B |= (Timer_1.OperationType_WGM1_32 << WGM12) & WGM1_32_MASK;
@@ -445,16 +442,28 @@ void PWM1_Init(void)
 	// Set PWM Mode (Inverted - Non-Inverted) //
 	if(Timer_1.OC_Ch_FOC1A_B == CH_A_ONLY)
 	{
+		// Set OC1A Pin Direction Output //
+		SetBit(PWM1_A_PORT_DIR_REG,PWM1_A_OC1A_PIN);
+		
 		TCCR1A &= ~COM1A_10_MASK;
 		TCCR1A |= (Timer_1.PWM_OP_Mode_COM1A_10 << COM1A0) & COM1A_10_MASK;
 	}
 	else if(Timer_1.OC_Ch_FOC1A_B == CH_B_ONLY)
 	{
+		// Set OC1B Pin Direction Output //
+		SetBit(PWM1_B_PORT_DIR_REG,PWM1_B_OC1B_PIN);
+		
 		TCCR1A &= ~COM1B_10_MASK;
 		TCCR1A |= (Timer_1.PWM_OP_Mode_COM1B_10 << COM1B0) & COM1B_10_MASK;
 	}
 	else
 	{
+		// Set OC1A Pin Direction Output //
+		SetBit(PWM1_A_PORT_DIR_REG,PWM1_A_OC1A_PIN);
+		
+		// Set OC1B Pin Direction Output //
+		SetBit(PWM1_A_PORT_DIR_REG,PWM1_B_OC1B_PIN);
+		
 		TCCR1A &= ~COM1A_10_MASK & ~COM1B_10_MASK;
 		TCCR1A |= ((Timer_1.PWM_OP_Mode_COM1A_10 << COM1A0) & COM1A_10_MASK) | ((Timer_1.PWM_OP_Mode_COM1B_10 << COM1B0) & COM1B_10_MASK);
 	}
@@ -493,97 +502,106 @@ void PWM1_Init(void)
 }
 void PWM1_Generate(uint16 Duty_Cycle_A, uint16 Duty_Cycle_B)
 {
-	switch(Timer_1.OperationType_WGM1_32)
+	if ((Timer_1.OC_Ch_FOC1A_B == CH_A_ONLY) || (Timer_1.OC_Ch_FOC1A_B == CH_A_B))
 	{
-		case NORM_PWM_PH_CO_TYPE:
-			if(Timer_1.Operation_Ph_Co_Type_WGM1_10 > 0)
-			{
-				switch(Timer_1.PWM_OP_Mode_COM1A_10)
+		switch(Timer_1.OperationType_WGM1_32)
+		{
+			case NORM_PWM_PH_CO_TYPE:
+				if(Timer_1.Operation_Ph_Co_Type_WGM1_10 > 0)
 				{
-					case TOGGLE:
-					case NON_INVERTED:
-						Timer_1.Comp_Value_A = (Timer_1.Ticks * Duty_Cycle_A) / 100;
-					break;
+					switch(Timer_1.PWM_OP_Mode_COM1A_10)
+					{
+						case TOGGLE:
+						case NON_INVERTED:
+							Timer_1.Comp_Value_A = (Timer_1.Ticks * Duty_Cycle_A) / 100;
+						break;
 					
-					case INVERTED:
-						Timer_1.Comp_Value_A = Timer_1.Ticks - ((Timer_1.Ticks * Duty_Cycle_A) / 100);
-					break;
+						case INVERTED:
+							Timer_1.Comp_Value_A = Timer_1.Ticks - ((Timer_1.Ticks * Duty_Cycle_A) / 100);
+						break;
 					
-					default:
-					break;
+						default:
+						break;
+					}
 				}
-			}
-		break;
+			break;
 		
-		case CTC_PWM_FAST_TYPE:
-			if(Timer_1.Operation_Fast_Type_WGM1_10 > 0)
-			{
-				switch(Timer_1.PWM_OP_Mode_COM1A_10)
+			case CTC_PWM_FAST_TYPE:
+				if(Timer_1.Operation_Fast_Type_WGM1_10 > 0)
 				{
-					case TOGGLE:
-					case NON_INVERTED:
-						Timer_1.Comp_Value_A = ((Timer_1.Ticks * Duty_Cycle_A) / 100) - 1;
-					break;
+					switch(Timer_1.PWM_OP_Mode_COM1A_10)
+					{
+						case TOGGLE:
+							Timer_1.Comp_Value_A = Timer_1.Ticks/2;
+						break;
+						case NON_INVERTED:
+							Timer_1.Comp_Value_A = ((Timer_1.Ticks * Duty_Cycle_A) / 100) - 1;
+						break;
 					
-					case INVERTED:
-						Timer_1.Comp_Value_A = Timer_1.Ticks - (((Timer_1.Ticks * Duty_Cycle_A) / 100) - 1);
-					break;
+						case INVERTED:
+							Timer_1.Comp_Value_A = Timer_1.Ticks - (((Timer_1.Ticks * Duty_Cycle_A) / 100) - 1);
+						break;
 					
-					default:
-					break;
-				}
+						default:
+						break;
+					}
 				
-			}
-		break;
-		
-		case PWM_PH_CO_MODE:
-			if(Timer_1.Operation_Ph_Co_Mod_WGM1_10 % 2 == 0)
-			{
-				switch(Timer_1.PWM_OP_Mode_COM1A_10)
-				{
-					case TOGGLE:
-					case NON_INVERTED:
-						Timer_1.Comp_Value_A = (Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100;
-					break;
-					
-					case INVERTED:
-						Timer_1.Comp_Value_A = Timer_1.CUSTOME_TOP_ICR1 - ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100);
-					break;
-					
-					default:
-					break;
 				}
+			break;
+		
+			case PWM_PH_CO_MODE:
+				if(Timer_1.Operation_Ph_Co_Mod_WGM1_10 % 2 == 0)
+				{
+					switch(Timer_1.PWM_OP_Mode_COM1A_10)
+					{
+						case TOGGLE:
+						case NON_INVERTED:
+							Timer_1.Comp_Value_A = (Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100;
+						break;
+					
+						case INVERTED:
+							Timer_1.Comp_Value_A = Timer_1.CUSTOME_TOP_ICR1 - ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100);
+						break;
+					
+						default:
+						break;
+					}
 				
-			}
-		break;
-		
-		case CTC_PWM_FAST_MODE:
-			if(Timer_1.Operation_Fast_Type_WGM1_10 == 2)
-			{
-				switch(Timer_1.PWM_OP_Mode_COM1A_10)
-				{
-					case TOGGLE:
-					case NON_INVERTED:
-						Timer_1.Comp_Value_A = ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100) - 1;
-					break;
-					
-					case INVERTED:
-						Timer_1.Comp_Value_A = Timer_1.CUSTOME_TOP_ICR1 - (((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100) - 1);
-					break;
-					
-					default:
-					break;
 				}
-			}
-		break;
+			break;
 		
-		default:
-		break;
+			case CTC_PWM_FAST_MODE:
+				if(Timer_1.Operation_Fast_Type_WGM1_10 == 2)
+				{
+					switch(Timer_1.PWM_OP_Mode_COM1A_10)
+					{
+						case TOGGLE:
+						case NON_INVERTED:
+							Timer_1.Comp_Value_A = ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100) - 1;
+						break;
+					
+						case INVERTED:
+							Timer_1.Comp_Value_A = Timer_1.CUSTOME_TOP_ICR1 - (((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_A) / 100) - 1);
+						break;
+					
+						default:
+						break;
+					}
+				}
+			break;
+		
+			default:
+			break;
+		}
+		OCR1A_VAL = Timer_1.Comp_Value_A;
+		if(Timer_1.OC_Ch_FOC1A_B == CH_A_B)
+			OCR1B_VAL = Timer_1.Comp_Value_B;
 	}
-
-	switch(Timer_1.OperationType_WGM1_32)
+	else if ((Timer_1.OC_Ch_FOC1A_B == CH_B_ONLY) || (Timer_1.OC_Ch_FOC1A_B == CH_A_B))
 	{
-		case NORM_PWM_PH_CO_TYPE:
+		switch(Timer_1.OperationType_WGM1_32)
+		{
+			case NORM_PWM_PH_CO_TYPE:
 			switch(Timer_1.PWM_OP_Mode_COM1B_10)
 			{
 				case NON_INVERTED:
@@ -597,95 +615,80 @@ void PWM1_Generate(uint16 Duty_Cycle_A, uint16 Duty_Cycle_B)
 				default:
 				break;
 			}
-		break;
-		
-		case CTC_PWM_FAST_TYPE:
-		if(Timer_1.Operation_Fast_Type_WGM1_10 > 0)
-		{
-			switch(Timer_1.PWM_OP_Mode_COM1B_10)
-			{
-				case NON_INVERTED:
-				Timer_1.Comp_Value_B = ((Timer_1.Ticks * Duty_Cycle_B) / 100) - 1;
-				break;
-				
-				case INVERTED:
-				Timer_1.Comp_Value_B = Timer_1.Ticks - (((Timer_1.Ticks * Duty_Cycle_B) / 100) - 1);
-				break;
-				
-				default:
-				break;
-			}
+			break;
 			
-		}
-		break;
-		
-		case PWM_PH_CO_MODE:
-		if(Timer_1.Operation_Ph_Co_Mod_WGM1_10 % 2 == 0)
-		{
-			switch(Timer_1.PWM_OP_Mode_COM1B_10)
+			case CTC_PWM_FAST_TYPE:
+			if(Timer_1.Operation_Fast_Type_WGM1_10 > 0)
 			{
-				case NON_INVERTED:
-				Timer_1.Comp_Value_B = (Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100;
-				break;
+				switch(Timer_1.PWM_OP_Mode_COM1B_10)
+				{
+					case NON_INVERTED:
+					Timer_1.Comp_Value_B = ((Timer_1.Ticks * Duty_Cycle_B) / 100) - 1;
+					break;
+					
+					case INVERTED:
+					Timer_1.Comp_Value_B = Timer_1.Ticks - (((Timer_1.Ticks * Duty_Cycle_B) / 100) - 1);
+					break;
+					
+					default:
+					break;
+				}
 				
-				case INVERTED:
-				Timer_1.Comp_Value_B = Timer_1.CUSTOME_TOP_ICR1 - ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100);
-				break;
-				
-				default:
-				break;
 			}
+			break;
 			
-		}
-		break;
-		
-		case CTC_PWM_FAST_MODE:
-		if(Timer_1.Operation_Fast_Type_WGM1_10 == 2)
-		{
-			switch(Timer_1.PWM_OP_Mode_COM1B_10)
+			case PWM_PH_CO_MODE:
+			if(Timer_1.Operation_Ph_Co_Mod_WGM1_10 % 2 == 0)
 			{
-				case NON_INVERTED:
-				Timer_1.Comp_Value_B = ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100) - 1;
-				break;
+				switch(Timer_1.PWM_OP_Mode_COM1B_10)
+				{
+					case NON_INVERTED:
+					Timer_1.Comp_Value_B = (Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100;
+					break;
+					
+					case INVERTED:
+					Timer_1.Comp_Value_B = Timer_1.CUSTOME_TOP_ICR1 - ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100);
+					break;
+					
+					default:
+					break;
+				}
 				
-				case INVERTED:
-				Timer_1.Comp_Value_B = Timer_1.CUSTOME_TOP_ICR1 - (((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100) - 1);
-				break;
-				
-				default:
-				break;
 			}
+			break;
+			
+			case CTC_PWM_FAST_MODE:
+			if(Timer_1.Operation_Fast_Type_WGM1_10 == 2)
+			{
+				switch(Timer_1.PWM_OP_Mode_COM1B_10)
+				{
+					case NON_INVERTED:
+					Timer_1.Comp_Value_B = ((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100) - 1;
+					break;
+					
+					case INVERTED:
+					Timer_1.Comp_Value_B = Timer_1.CUSTOME_TOP_ICR1 - (((Timer_1.CUSTOME_TOP_ICR1 * Duty_Cycle_B) / 100) - 1);
+					break;
+					
+					default:
+					break;
+				}
+			}
+			break;
+			
+			default:
+			break;
 		}
-		break;
-		
-		default:
-		break;
-	}
-
-	switch(Timer_1.OC_Ch_FOC1A_B)
-	{
-		case CH_A_ONLY:
+		OCR1B_VAL = Timer_1.Comp_Value_B;
+		if(Timer_1.OC_Ch_FOC1A_B == CH_A_B)
 			OCR1A_VAL = Timer_1.Comp_Value_A;
-		break;
-		
-		case CH_B_ONLY:
-			OCR1B_VAL = Timer_1.Comp_Value_B;
-		break;
-		
-		case CH_A_B:
-			OCR1A_VAL = Timer_1.Comp_Value_A;
-			OCR1B_VAL = Timer_1.Comp_Value_B;
-		break;
-		
-		default:
-		break;
 	}
 }
 void PWM1_Start(void)
 {
 	// Set Clock's source to start PWM //
 	TCCR1B &= ~CS1_2_0_MASK;
-	TCCR1B |= (Timer_1.prescalar << CS10) & CS1_2_0_MASK;
+	TCCR1B |= (Timer_1.Clk_Source_CS1_2_0 & CS1_2_0_MASK);
 }
 void PWM1_Stop(void)
 {
