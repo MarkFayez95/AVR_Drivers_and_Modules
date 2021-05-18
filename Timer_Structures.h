@@ -32,19 +32,7 @@ typedef enum
     EXT_CLK_RISSING_EDGE
 } CLK_SEL;
 
-//*********** Special for Timer_0 & Timer_2 Setting Options ***********//
-typedef enum
-{
-	NO_CLOCK,
-	CLOCK_NO_PRESC,
-	CLOCK_PRESC_8,
-	CLOCK_PRESC_32,
-	CLOCK_PRESC_64,
-	CLOCK_PRESC_128,
-	CLOCK_PRESC_256,
-	CLOCK_PRESC_1024
-} CLK_SEL_TIMER_2;
-
+//*********** Special for Timer_0 Setting Options ***********//
 typedef enum
 {
     TIMER_NORM,
@@ -118,6 +106,19 @@ typedef enum
 	CH_A_ONLY, // FOC1A = 1 & FOC1B = 0
 	CH_A_B // Both channels are active	
 }COMP_CH;
+
+//*********** Special for Timer_2 Setting Options ***********//
+typedef enum
+{
+	NO_CLOCK,
+	CLOCK_NO_PRESC,
+	CLOCK_PRESC_8,
+	CLOCK_PRESC_32,
+	CLOCK_PRESC_64,
+	CLOCK_PRESC_128,
+	CLOCK_PRESC_256,
+	CLOCK_PRESC_1024
+} CLK_SEL_TIMER_2;
 
 //*********** Timers Configuration Structures ***********//
 typedef struct 

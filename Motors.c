@@ -22,8 +22,8 @@ void DCMotor_Init(void)
 	#endif
 	
 	// Timer_1 / PWM_1 Configurations::
-	Timer_1.OperationType_WGM1_32 = CTC_PWM_FAST_TYPE;
-	Timer_1.Operation_Fast_Type_WGM1_10 = FAST_10_BIT;
+	Timer_1.OperationType_WGM1_32 = NORM_PWM_PH_CO_TYPE;
+	Timer_1.Operation_Ph_Co_Type_WGM1_10 = PWM_PH_CO_10_BIT;
 	
 	#if ((MOTOR_A_SEL == ENABLE) && (MOTOR_B_SEL == ENABLE))
 		Timer_1.PWM_OP_Mode_COM1A_10 = NON_INVERTED;
@@ -37,8 +37,8 @@ void DCMotor_Init(void)
 		Timer_1.OC_Ch_FOC1A_B = CH_A_ONLY;
 	#endif
 
-	Timer_1.Clk_Source_CS1_2_0 = CLK_PRESC_256;
-	Timer_1.prescalar = PRESC_256;
+	Timer_1.Clk_Source_CS1_2_0 = CLK_PRESC_8;
+	Timer_1.prescalar = PRESC_8;
 
 	Timer_1.Ticks = 0;
 	Timer_1.Tick_Time = 0;
@@ -89,17 +89,46 @@ void DCMotor_Init(void)
 #if ((MOTOR_A_SEL == ENABLE) && (MOTOR_B_SEL == ENABLE))
 	void DCMotors_SetSpeed(uint16 Speed_A, uint16 Speed_B)
 	{
-		PWM1_Generate(Speed_A,Speed_B);
+		if ((Speed_A == 0) || (Speed_B == 0))
+		{
+			if((Speed_A == 0) && (Speed_B == 0))
+				PWM1_Generate(1,1);
+			else if(Speed_A == 0)
+				PWM1_Generate(Speed_B,1);
+			else if(Speed_B == 0)
+				PWM1_Generate(1, Speed_A);
+		}
+		else if((Speed_A == 100) || (Speed_B == 100))
+		{
+			if((Speed_A == 100) && (Speed_B == 100))
+				PWM1_Generate(99,99);
+			else if(Speed_A == 100)
+				PWM1_Generate(Speed_B,99);
+			else if(Speed_B == 100)
+				PWM1_Generate(99, Speed_A);
+		}
+		else
+			PWM1_Generate(Speed_B , Speed_A);
 	}
 #elif (MOTOR_A_SEL == ENABLE)
 	void DCMotor_A_SetSpeed(uint16 Speed_A)
 	{
-		PWM1_Generate(0,Speed_A);
+		if(Speed_A == 0)
+			PWM1_Generate(0,1);
+		else if (Speed_A == 100)
+			PWM1_Generate(0,99);
+		else
+			PWM1_Generate(0,Speed_A);
 	}
 #elif (MOTOR_B_SEL == ENABLE)
 	void DCMotor_B_SetSpeed(uint16 Speed_B)
 	{
-		PWM1_Generate(Speed_B,0);
+		if(Speed_B == 0)
+			PWM1_Generate(1,0);
+		else if (Speed_B == 100)
+			PWM1_Generate(99,0);
+		else
+			PWM1_Generate(Speed_B,0);
 	}
 #endif
 

@@ -597,7 +597,7 @@ void PWM1_Generate(uint16 Duty_Cycle_A, uint16 Duty_Cycle_B)
 		if(Timer_1.OC_Ch_FOC1A_B == CH_A_B)
 			OCR1B_VAL = Timer_1.Comp_Value_B;
 	}
-	else if ((Timer_1.OC_Ch_FOC1A_B == CH_B_ONLY) || (Timer_1.OC_Ch_FOC1A_B == CH_A_B))
+	if ((Timer_1.OC_Ch_FOC1A_B == CH_B_ONLY) || (Timer_1.OC_Ch_FOC1A_B == CH_A_B))
 	{
 		switch(Timer_1.OperationType_WGM1_32)
 		{
